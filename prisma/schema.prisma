@@ -1,0 +1,60 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String       @id @default(uuid())
+  email         String       @unique
+  name          String?
+  passwordHash  String
+  age           Int
+  monthlySalary Float
+  cityTier      String       @default("TIER_1")
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  goals         Goal[]
+  investments   Investment[]
+}
+
+model Goal {
+  id           String           @id @default(uuid())
+  userId       String
+  user         User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title        String
+  targetAmount Float
+  targetDate   DateTime
+  horizon      String
+  status       String           @default("ON_TRACK")
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  allocations  GoalAllocation[]
+}
+
+model Investment {
+  id           String           @id @default(uuid())
+  userId       String
+  user         User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title        String
+  category     String
+  currentValue Float
+  monthlySIP   Float            @default(0)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  allocations  GoalAllocation[]
+}
+
+model GoalAllocation {
+  id           String     @id @default(uuid())
+  goalId       String
+  goal         Goal       @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  investmentId String
+  investment   Investment @relation(fields: [investmentId], references: [id], onDelete: Cascade)
+  allocatedPct Float
+
+  @@unique([goalId, investmentId])
+}
